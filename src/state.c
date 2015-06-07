@@ -12,6 +12,83 @@
 
 #define corepropdata(D, id, eid) (vector_get(&(D)->coredata, (id)) + (eid))
 
+#ifdef _WIN32
+#define aligned_alloc(align, size) _aligned_malloc(size, align)
+#define aligned_free(align, size) _aligned_mfree(size, align)
+#endif
+
+
+static void listnode_remove(listnode_t * e)
+{
+	e->prev->next = e->next;
+	e->next->prev = e->prev;
+	e->next = e;
+	e->prev = e;
+}
+// insert a into b's list, after b
+static void listnode_insert_after(listnode_t * a, listnode_t * b)
+{
+	// pull it from its current list
+	listnode_remove(a);
+
+	a->prev = b;
+	a->next = b->next;
+	b->next = a;
+	a->next->prev = a;
+}
+// insert a into b's list, before b
+static void listnode_insert_before(listnode_t * a, listnode_t * b)
+{
+	// pull it from its current list
+	listnode_remove(a);
+
+	a->next = b;
+	a->prev = b->prev;
+	b->prev = a;
+	a->prev->next = a;
+}
+
+static listnode_t * listnode_create(id_t type, size_t size)
+{
+	listnode_t * new_node = calloc(sizeof(listnode_t) + size, 1);
+	new_node->next = new_node;
+	new_node->prev = new_node;
+	new_node->typeid = type;
+
+	return new_node;
+}
+
+static void listnode_destroy(listnode_t * e)
+{
+	if(e->next == e)
+	{
+		while(e->next != e)
+		{
+			listnode_destroy(e->next);
+		}
+	}
+	else
+	{
+		listnode_remove(e);
+	}
+
+	free(e);
+}
+
+listnode_t * listnode_find(listnode_t * first, id_t type)
+{
+	listnode_foreach(first, node)
+	{
+		if(node->typeid == type)
+		{
+			return node;
+		}
+	}
+
+	return 0;
+}
+
+
 de4_State * de4_create(size_t numentities)
 {
 	de4_State * D = malloc(sizeof(de4_State));
@@ -39,6 +116,25 @@ de4_State * de4_create(size_t numentities)
 	D->error = "";
 
 	return D;
+}
+
+#define PROP_CORE_FLAG 0x10000
+#define PROP_VALID_FLAG 0x20000
+
+de4_PropertyDef * getdef(de4_State * D, id_t id)
+{
+	if(id & PROP_CORE_FLAG)
+	{
+		if(vector_idxok(&D->corepropdefs, id & 0xFFFF))
+			return &vector_get(&D->propdefs, (id & 0xFFFF));
+	}
+	else
+	{
+		if(vector_idxok(&D->propdefs, id & 0xFFFF))
+			return &vector_get(&D->propdefs, (id & 0xFFFF));
+	}
+
+	return 0;
 }
 
 // sets up the function environment and calls it
@@ -75,18 +171,14 @@ void de4_destroy(de4_State * D)
 
 		if(e->properties)
 		{
-			prop_t * first = e->properties;
-
-			prop_t * p = first;
-			do
+			listnode_foreach(e->properties, node)
 			{
-				if(p->def->deinit)
-					callenv(D, eid, p->data, p->def->deinit);
+				de4_PropertyDef * def = getdef(D, node->typeid);
 
-				prop_t * pold = p;
-				p = p->next;
-				free(pold);
-			} while(p != first);
+				if(def && def->deinit)
+					callenv(D, eid, node->data, def->deinit);
+			}
+			listnode_destroy(e->properties); // destroy the whole list
 		}
 	}
 	free(D->entities);
@@ -95,7 +187,7 @@ void de4_destroy(de4_State * D)
 	vector_deinit(&D->corepropdefs);
 
 	// free every core
-	vector_foreach(&D->coredata, it) { free(it.value); }
+	vector_foreach(&D->coredata, it) { free(*it.value); }
 	vector_deinit(&D->coredata); // deinitialize list of cores
 
 	free(D);
@@ -140,21 +232,21 @@ void de4_dump(de4_State * D)
 			printf("\b ] ( ");
 			if(e->properties)
 			{
-				prop_t * p = e->properties;
-				do
+				listnode_foreach(e->properties, node)
 				{
-					printf("%s.", p->def->name);
-					p = p->next;
-				} while(p != e->properties);
+					de4_PropertyDef * def = getdef(D, node->typeid);
+
+					if(def)
+						printf("%s.", def->name);
+					else
+						printf("UNKNOWN.");
+				}
 			}
 			printf("\b )\n");
 		}
 	}
 	printf("\n");
 }
-
-#define PROP_CORE_FLAG 0x10000
-#define PROP_VALID_FLAG 0x20000
 
 de4_PropId de4_propid(de4_State * D, const char * name)
 {
@@ -204,7 +296,7 @@ de4_PropId de4_defcoreproperty(de4_State * D, de4_PropertyDef * p)
 
 		vector_push(&D->corepropdefs, newp);
 
-		void * data = _aligned_malloc(DE4_CACHELINEBYTES*D->entity_num, DE4_CACHELINEBYTES);
+		void * data = memalign(DE4_CACHELINEBYTES, D->entity_num*DE4_CACHELINEBYTES);
 		memset(data, 0, DE4_CACHELINEBYTES*D->entity_num);
 		vector_push(&D->coredata, data);
 
@@ -263,24 +355,20 @@ static void * getprop(de4_State * D, de4_Entity eid, de4_PropId id)
 	{
 		// find the entity data in the (circular) linked list
 
-		prop_t * first = getentity(D, eid)->properties;
+		entity_t * entity = getentity(D, eid);
 
-		if(!first) return 0; // entity doesn't have any non-core properties
+		if(!entity) return 0;
 
-		prop_t * p = first;
-		do
-		{
-			// id matches?
-			if(p->id == id)
-			{
-				return p->data;
-			}
-			p = p->next;
-		} while(p != first);
+		listnode_t * found = listnode_find(entity->properties, id);
+
+		if(!found) return 0;
+
+		return found->data;
 	}
 
 	return 0;
 }
+/*
 static void * addprop(de4_State * D, de4_Entity eid, de4_PropId id)
 {
 	printf("addprop(0x%04X, 0x%08X)\n", eid, id);
@@ -495,3 +583,4 @@ void de4_removepropertyi(de4_State * D, de4_PropId id)
 
 	removeprop(D, D->this_entity, id);
 }
+*/

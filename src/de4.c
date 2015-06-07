@@ -21,7 +21,7 @@ typedef struct
 		vector_struct(de4_PropId) ids;
 	} newentityi;
 	struct {
-		vector_struct(char[10]) names;
+		vector_struct(de4_Name) names;
 	} newentity;
 	struct {
 		de4_UDFunction f;

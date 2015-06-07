@@ -6,6 +6,25 @@
 
 #include "de4.h"
 
+// this needs to be 32 bits or larger
+typedef unsigned int id_t;
+#define DE4_BADID ((id_t)0);
+
+typedef struct listnode
+{
+	struct listnode * next;
+	struct listnode * prev;
+	id_t typeid;
+	uint8_t data[];
+} listnode_t;
+
+
+#define listnode_foreach(first, nodevar) \
+	for(listnode_t * nodevar = 0 ; \
+		nodevar != (first) ; \
+		nodevar = nodevar ? nodevar->next : first)
+
+
 typedef uint8_t core_data_t[DE4_CACHELINEBYTES];
 
 typedef struct prop
@@ -19,7 +38,7 @@ typedef struct prop
 
 typedef struct entity
 {
-	prop_t * properties;
+	listnode_t * properties;
 	char name[DE4_NAMEBYTES];
 	uint32_t coreflags;
 } entity_t;

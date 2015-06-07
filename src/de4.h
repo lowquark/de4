@@ -16,12 +16,15 @@ typedef void (* de4_UDFunction)(de4_State * D, void * ud);
 
 typedef void (* de4_EventHandler)(de4_State * D, void * data, size_t size);
 
+
 #define DE4_NAMEBYTES (DE4_NAMELEN+1)
+
+typedef char de4_Name[DE4_NAMEBYTES];
 typedef struct
 {
 	de4_Function init, deinit;
 	size_t size;
-	char name[DE4_NAMEBYTES];
+	de4_Name name;
 	de4_PropId id;
 } de4_PropertyDef;
 
