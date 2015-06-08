@@ -10,71 +10,55 @@
 #include <stdio.h>
 #include <assert.h>
 
-#ifdef _WIN32
-#define memalign(align, size) _aligned_malloc(size, align)
-#define aligned_free(align, size) _aligned_mfree(size, align)
-#endif
-
-de4_PropertyDef * prop_getdef(de4_State * D, de4_Id propid)
+const de4_PropertyDef * prop_getdefi(de4_State * D, de4_Id propid)
 {
 	if(propid & PROP_CORE_FLAG)
 	{
-		if(vector_idxok(&D->corepropdefs, propid & 0xFFFF))
-			return &vector_get(&D->propdefs, (propid & 0xFFFF));
+		if(vector_idxok(&D->corepropdefs, PROP_IDX(propid)))
+			return &vector_get(&D->propdefs, PROP_IDX(propid));
 	}
 	else
 	{
-		if(vector_idxok(&D->propdefs, propid & 0xFFFF))
-			return &vector_get(&D->propdefs, (propid & 0xFFFF));
+		if(vector_idxok(&D->propdefs, PROP_IDX(propid)))
+			return &vector_get(&D->propdefs, PROP_IDX(propid));
 	}
 
 	return 0;
 }
-
-de4_Id de4_propid(de4_State * D, const char * name)
+const de4_PropertyDef * prop_getdef(de4_State * D, const char * name)
 {
 	vector_foreach(&D->corepropdefs, it)
 	{
 		if(strcmp(name, it.ptr->name) == 0)
 		{
-			return it.ptr->id;
+			return it.ptr;
 		}
 	}
 	vector_foreach(&D->propdefs, it)
 	{
 		if(strcmp(name, it.ptr->name) == 0)
 		{
-			return it.ptr->id;
+			return it.ptr;
 		}
 	}
 
-	return DE4_BADID;
+	return 0;
 }
 
-de4_Id de4_defproperty(de4_State * D, de4_PropertyDef * p)
+de4_Id prop_adddef(de4_State * D, const de4_PropertyDef * def)
 {
-	if(de4_propid(D, p->name) != DE4_BADID)
-	{
-		return DE4_BADID;
-	}
-
-	de4_PropertyDef newp = *p;
+	de4_PropertyDef newp = *def;
 	newp.id = (vector_size(&D->propdefs) & 0xFFFF) | PROP_VALID_FLAG;
 
 	vector_push(&D->propdefs, newp);
 
 	return newp.id;
 }
-de4_Id de4_defcoreproperty(de4_State * D, de4_PropertyDef * p)
+de4_Id prop_addcoredef(de4_State * D, const de4_PropertyDef * def)
 {
-	if(de4_propid(D, p->name) != DE4_BADID)
+	if(def->size <= DE4_CACHELINEBYTES)
 	{
-		return DE4_BADID;
-	}
-
-	if(p->size <= DE4_CACHELINEBYTES)
-	{
-		de4_PropertyDef newp = *p;
+		de4_PropertyDef newp = *def;
 		newp.id = (vector_size(&D->propdefs) & 0xFFFF) | PROP_CORE_FLAG | PROP_VALID_FLAG;
 
 		vector_push(&D->corepropdefs, newp);
@@ -91,6 +75,17 @@ de4_Id de4_defcoreproperty(de4_State * D, de4_PropertyDef * p)
 	}
 }
 
+void prop_clearall(de4_State * D)
+{
+	vector_deinit(&D->propdefs);
+	vector_deinit(&D->corepropdefs);
+
+	// free every core
+	vector_foreach(&D->coredata, it) { free(*it.ptr); }
+	vector_deinit(&D->coredata); // deinitialize list of cores
+}
+
+// retrieves component data for an entity
 void * prop_get(de4_State * D, de4_Id eid, de4_Id id)
 {
 	assert(eid < D->entity_num);
@@ -123,6 +118,7 @@ void * prop_get(de4_State * D, de4_Id eid, de4_Id id)
 	}
 }
 
+// blindly attaches component data to an entity
 void * prop_add(de4_State * D, de4_Id eid, de4_Id propid)
 {
 	assert(eid < D->entity_num);
@@ -130,7 +126,7 @@ void * prop_add(de4_State * D, de4_Id eid, de4_Id propid)
 	printf("prop_add(0x%04X, 0x%08X)\n", eid, propid);
 
 	entity_t * e = entity_get(D, eid);
-	de4_PropertyDef * def = prop_getdef(D, propid);
+	const de4_PropertyDef * def = prop_getdefi(D, propid);
 	if(!def) return 0;
 
 	void * data = 0;
@@ -171,6 +167,8 @@ void * prop_add(de4_State * D, de4_Id eid, de4_Id propid)
 
 	return data;
 }
+
+// finds and removes component data from an entity
 void prop_remove(de4_State * D, de4_Id eid, de4_Id propid)
 {
 	assert(eid < D->entity_num);
@@ -178,7 +176,7 @@ void prop_remove(de4_State * D, de4_Id eid, de4_Id propid)
 	printf("prop_remove(0x%04X, 0x%08X)\n", eid, propid);
 
 	entity_t * e = entity_get(D, eid);
-	de4_PropertyDef * def = prop_getdef(D, propid);
+	const de4_PropertyDef * def = prop_getdefi(D, propid);
 	if(!def) return;
 
 	if(propid & PROP_CORE_FLAG)

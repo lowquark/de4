@@ -1,7 +1,8 @@
 #ifndef STATE_H
 #define STATE_H
 
-#include "de4.h"
+#include <de4/types.h>
+
 #include "vector.h"
 #include "entity.h"
 #include "misc.h"
@@ -14,7 +15,6 @@ typedef struct
 	enum {
 		EVENT_NEWENTITYI,
 		EVENT_NEWENTITY,
-		EVENT_NEWENTITYC,
 
 		EVENT_ADDPROPERTY,
 		EVENT_REMOVEPROPERTY,
@@ -28,10 +28,6 @@ typedef struct
 	struct {
 		vector_struct(de4_Name) names;
 	} newentity;
-	struct {
-		de4_UDFunction f;
-		void * ud;
-	} newentityc;
 
 	struct {
 		de4_Id id;
@@ -46,8 +42,6 @@ typedef struct
 } event_t;
 
 typedef uint8_t core_data_t[DE4_CACHELINEBYTES];
-
-typedef struct any any_t;
 
 struct de4_State
 {
@@ -69,6 +63,8 @@ struct de4_State
 
 	const char * error;
 };
+
+typedef struct de4_State de4_State;
 
 void state_callenv(de4_State * D, de4_Id this_entity, void * this_prop, de4_Function f);
 

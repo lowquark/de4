@@ -1,5 +1,5 @@
 
-#include "de4.h"
+#include <de4/de4.h>
 
 #include "state.h"
 #include "prop.h"
@@ -8,9 +8,35 @@
 #define BADPROP(id) (id == DE4_BADID || !(id & PROP_VALID_FLAG))
 #define BADENTITY(id) (id == DE4_BADID)
 
+// looks up the id of the given named property
+de4_Id de4_propertyid(de4_State * D, const char * name)
+{
+	const de4_PropertyDef * def = prop_getdef(D, name);
+	if(def) return def->id;
+
+	return DE4_BADID;
+}
+
+de4_Id de4_defproperty(de4_State * D, de4_PropertyDef * p)
+{
+	if(prop_getdef(D, p->name)) return DE4_BADID;
+
+	return prop_adddef(D, p);
+}
+de4_Id de4_defcoreproperty(de4_State * D, de4_PropertyDef * p)
+{
+	if(prop_getdef(D, p->name)) return DE4_BADID;
+
+	return prop_addcoredef(D, p);
+}
+
 de4_Id de4_thisentity(de4_State * D)
 {
 	return D->this_entity;
+}
+void * de4_thisproperty(de4_State * D)
+{
+	return D->this_property;
 }
 
 void * de4_propertyi(de4_State * D, de4_Id id)
@@ -82,11 +108,11 @@ size_t de4_pass1(de4_State * D, de4_Id id_0, de4_Function f)
 	if(PROP_IS_CORE(id_0))
 	{
 		uint32_t flag = (1 << PROP_IDX(id_0));
-		for(de4_Id eid = 0 ; eid < D->entity_num ; eid ++)
+		for(de4_Id eid = 0 ; eid < D->entity_num ; ++ eid)
 		{
 			if(D->entities[eid].coreflags & flag)
 			{
-				n ++;
+				++ n;
 				D->this_entity = eid + 1;
 				f(D);
 			}
@@ -94,7 +120,7 @@ size_t de4_pass1(de4_State * D, de4_Id id_0, de4_Function f)
 	}
 	else
 	{
-		for(de4_Id eid = 0 ; eid < D->entity_num ; eid ++)
+		for(de4_Id eid = 0 ; eid < D->entity_num ; ++ eid)
 		{
 			vector_foreach(&D->entities[eid].properties, it)
 			{

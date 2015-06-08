@@ -35,10 +35,13 @@ void entity_deinit(de4_State * D, de4_Id eid)
 
 	vector_foreach(&e->properties, it)
 	{
-		de4_PropertyDef * def = prop_getdef(D, it.ptr->typeid);
+		const de4_PropertyDef * def = prop_getdefi(D, it.ptr->typeid);
 
 		if(def && def->deinit)
 			state_callenv(D, eid, it.ptr->value, def->deinit);
+
+		free(it.ptr->value);
+		it.ptr->value = 0;
 	}
 	vector_deinit(&e->properties);
 }
@@ -88,9 +91,9 @@ de4_Id de4_newentityi(de4_State * D, const char * name, de4_Id * plist)
 }
 de4_Id de4_newentity(de4_State * D, const char * name, const char ** plist)
 {
-	de4_Id id = DE4_BADID;
+	de4_Id eid = DE4_BADID;
 
-	entity_t * e = entity_new(D, &id);
+	entity_t * e = entity_new(D, &eid);
 	if(e)
 	{
 		strncpy(e->name, name, DE4_NAMEBYTES);
@@ -99,17 +102,20 @@ de4_Id de4_newentity(de4_State * D, const char * name, const char ** plist)
 
 		while(*pname)
 		{
-			de4_Id pid = de4_propid(D, *pname);
+			const de4_PropertyDef * def = prop_getdef(D, *pname);
 
-			if(!prop_get(D, id, pid)) prop_add(D, id, pid);
+			if(def)
+			{
+				if(!prop_get(D, eid, def->id)) prop_add(D, eid, def->id);
+			}
 
 			pname ++;
 		}
 	}
 
-	return id;
+	return eid;
 }
-de4_Id de4_newentityc(de4_State * D, const char * name, de4_UDFunction ctor, void * ud)
+de4_Id de4_newentityc(de4_State * D, const char * name, de4_DataFunction ctor, void * ud)
 {
 	de4_Id id = DE4_BADID;
 

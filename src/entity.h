@@ -1,7 +1,10 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include "de4.h"
+#include <stdint.h>
+
+#include <de4/types.h>
+
 #include "vector.h"
 #include "misc.h"
 

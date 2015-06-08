@@ -5,39 +5,14 @@
 #include <stddef.h>
 
 #include "de4cfg.h"
+#include "types.h"
 
-// this needs to be 32 bits or larger
-typedef unsigned int de4_Id;
-#define DE4_BADID ((de4_Id)0)
-
-typedef struct de4_State de4_State;
-
-typedef void (* de4_Function)(de4_State * D);
-typedef void (* de4_UDFunction)(de4_State * D, void * ud);
-
-typedef void (* de4_EventHandler)(de4_State * D, void * data, size_t size);
-
-
-#define DE4_NAMEBYTES (DE4_NAMELEN+1)
-typedef char de4_Name[DE4_NAMEBYTES];
-
-typedef struct
-{
-	de4_Function init, deinit;
-	size_t size;
-	de4_Name name;
-	de4_Id id;
-} de4_PropertyDef;
-
-
+// create and destroy an instance of the engine
 de4_State * de4_create(size_t numentities);
 void de4_destroy(de4_State * D);
-const char * de4_geterror(de4_State * D);
-
-void de4_dump(de4_State * D);
 
 // looks up the id of the given named property
-de4_Id de4_propid(de4_State * D, const char * name);
+de4_Id de4_propertyid(de4_State * D, const char * name);
 
 // defines a property
 de4_Id de4_defproperty(de4_State * D, de4_PropertyDef * p);
@@ -46,13 +21,15 @@ de4_Id de4_defcoreproperty(de4_State * D, de4_PropertyDef * p);
 
 // refers to the current entity
 de4_Id de4_thisentity(de4_State * D);
+// refers to the current property data
+void * de4_thisproperty(de4_State * D);
 
 // creates an entity with the supplied component types
 de4_Id de4_newentityi(de4_State * D, const char * name, de4_Id * plist);
 // creates an entity with the supplied component names
 de4_Id de4_newentity(de4_State * D, const char * name, const char ** plist);
 // creates an entity by calling the supplied constructor
-de4_Id de4_newentityc(de4_State * D, const char * name, de4_UDFunction ctor, void * ud);
+de4_Id de4_newentityc(de4_State * D, const char * name, de4_DataFunction ctor, void * ud);
 
 // looks up a property on the current entity
 void * de4_propertyi(de4_State * D, de4_Id id);
@@ -68,16 +45,17 @@ void   de4_removepropertyi(de4_State * D, de4_Id id);
 // destroys the property with name /name/ on the current entity
 #define de4_removeproperty(D, name)     de4_removepropertyi((D), de4_propid((D), (name)))
 
-// refers to the current system
-de4_Id de4_thissystem (de4_State * D);
-// refers to the current property
-void * de4_thispropertyz  (de4_State * D, size_t * size);
+size_t de4_pass1(de4_State * D, de4_Id id_0, de4_Function f);
+size_t de4_pass2(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Function f);
+size_t de4_pass3(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Id id_2, de4_Function f);
 
 // retrieves the nth property requested for processing by the system
 void * de4_systemprop     (de4_State * D, size_t n);
 
+/*
 // registers an event handler for a given event type
 void de4_subscribe(de4_State * D, uint16_t type, de4_EventHandler h);
+*/
 
 // fires an event
 void de4_emit(de4_State * D, uint16_t type, void * data, size_t size);
