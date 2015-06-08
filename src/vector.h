@@ -58,8 +58,8 @@ struct \
 #define vector_size(vector) ((vector)->end)
 
 #define vector_foreach(vec, it) \
-	for(struct { size_t index; __typeof__(*(vec)->data) * value; } it = { 0, &(vec)->data[0] } ; \
+	for(struct { size_t index; __typeof__(*(vec)->data) * ptr; } it = { 0, &(vec)->data[0] } ; \
 		it.index < (vec)->end ; \
-		it.index ++ , it.value = &(vec)->data[it.index] )
+		it.index ++ , it.ptr = &(vec)->data[it.index] )
 
 #endif

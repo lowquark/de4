@@ -1,47 +1,53 @@
 #ifndef STATE_H
 #define STATE_H
 
-#include "de4cfg.h"
-#include "vector.h"
-
 #include "de4.h"
+#include "vector.h"
+#include "entity.h"
+#include "misc.h"
 
-// this needs to be 32 bits or larger
-typedef unsigned int id_t;
-#define DE4_BADID ((id_t)0);
+#define corepropdata(D, id, eid) (vector_get(&(D)->coredata, (id)) + (eid))
 
-typedef struct listnode
+// event used internally by de4
+typedef struct
 {
-	struct listnode * next;
-	struct listnode * prev;
-	id_t typeid;
-	uint8_t data[];
-} listnode_t;
+	enum {
+		EVENT_NEWENTITYI,
+		EVENT_NEWENTITY,
+		EVENT_NEWENTITYC,
 
+		EVENT_ADDPROPERTY,
+		EVENT_REMOVEPROPERTY,
+ 	} type;
 
-#define listnode_foreach(first, nodevar) \
-	for(listnode_t * nodevar = 0 ; \
-		nodevar != (first) ; \
-		nodevar = nodevar ? nodevar->next : first)
+	union {
 
+	struct {
+		vector_struct(de4_Id) ids;
+	} newentityi;
+	struct {
+		vector_struct(de4_Name) names;
+	} newentity;
+	struct {
+		de4_UDFunction f;
+		void * ud;
+	} newentityc;
+
+	struct {
+		de4_Id id;
+		de4_Id eid;
+	} addproperty;
+	struct {
+		de4_Id id;
+		de4_Id eid;
+	} removeproperty;
+
+	};
+} event_t;
 
 typedef uint8_t core_data_t[DE4_CACHELINEBYTES];
 
-typedef struct prop
-{
-	de4_PropertyDef * def;
-	struct prop * next;
-	struct prop * prev;
-	de4_PropId id;
-	uint8_t data[];
-} prop_t;
-
-typedef struct entity
-{
-	listnode_t * properties;
-	char name[DE4_NAMEBYTES];
-	uint32_t coreflags;
-} entity_t;
+typedef struct any any_t;
 
 struct de4_State
 {
@@ -54,15 +60,16 @@ struct de4_State
 	entity_t * entities;
 	vector_struct(core_data_t *) coredata;
 
-	de4_Entity this_entity;
-	de4_System this_system;
+	de4_Id this_entity;
+	de4_Id this_system;
 	void * this_property;
+
+	vector_struct(event_t) events; // new entity, new component, ...
+	vector_struct(any_t) userevents;
 
 	const char * error;
 };
 
-de4_State * newstate();
-void deletestate(de4_State * D);
-
+void state_callenv(de4_State * D, de4_Id this_entity, void * this_prop, de4_Function f);
 
 #endif
