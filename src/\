@@ -11,8 +11,6 @@
 de4_State * de4_create(size_t numentities);
 void de4_destroy(de4_State * D);
 
-size_t de4_entitynum(de4_State * D);
-
 // looks up the id of the given named property
 de4_Id de4_propertyid(de4_State * D, const char * name);
 
@@ -55,16 +53,8 @@ size_t de4_pass3(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Id id_2, de4_Funct
 void * de4_systemprop     (de4_State * D, size_t n);
 
 void * de4_coredata_get(de4_State * D, int idx);
-#define DE4_BEGIN_COREPASS(D, id) \
-	do {\
-		uint8_t * data = de4_coredata_get(D, idx & 0xFFFF); \
-		uint32_t flags = (1 << (idx & 0xFFFF)); \
-
-		for( ; uint8_t <= 
-
-#define DE4_END_COREPASS \
-	} while(0)
-	
+#define de4_corepass(de4_State * D, de4_Id id) \
+	uint8_t * data = de4_coredata_get(D, idx & 0xFFFF)
 
 /*
 // registers an event handler for a given event type

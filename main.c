@@ -51,9 +51,9 @@ de4_PropertyDef prop2_def = {
 	.name = "prop2"
 };
 
-void testsys(de4_State * D)
+void testsys(de4_State * D, void * prop0)
 {
-	printf("testsys: %p  eid: %u  prop: %p\n", D, de4_thisentity(D), de4_thisproperty(D));
+	printf("testsys: %p  eid: %u  prop: %p\n", D, de4_thisentity(D), prop0);
 }
 
 int main(int argc, char ** argv)
@@ -81,7 +81,6 @@ int main(int argc, char ** argv)
 	de4_newentity(D, "joe3", props);
 
 	de4_pass1(D, de4_propertyid(D, "prop0"), testsys);
-	//de4_newentityc(D, "joejr", brutal, 0);
 
 	de4_dump(D);
 

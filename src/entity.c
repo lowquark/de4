@@ -115,7 +115,8 @@ de4_Id de4_newentity(de4_State * D, const char * name, const char ** plist)
 
 	return eid;
 }
-de4_Id de4_newentityc(de4_State * D, const char * name, de4_DataFunction ctor, void * ud)
+/*
+de4_Id de4_newentityc(de4_State * D, const char * name, de4_Function ctor, void * ud)
 {
 	de4_Id id = DE4_BADID;
 
@@ -131,3 +132,4 @@ de4_Id de4_newentityc(de4_State * D, const char * name, de4_DataFunction ctor, v
 
 	return id;
 }
+*/

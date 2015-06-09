@@ -12,7 +12,10 @@ typedef unsigned int de4_Id;
 typedef struct de4_State de4_State;
 
 typedef void (* de4_Function)(de4_State * D);
-typedef void (* de4_DataFunction)(de4_State * D, void * ud);
+typedef void (* de4_Function1)(de4_State * D, void * arg0);
+typedef void (* de4_Function2)(de4_State * D, void * arg0, void * arg1);
+typedef void (* de4_Function3)(de4_State * D, void * arg0, void * arg1, void * arg2);
+typedef void (* de4_Function4)(de4_State * D, void * arg0, void * arg1, void * arg2, void * arg3);
 
 #define DE4_NAMEBYTES (DE4_NAMELEN+1)
 typedef char de4_Name[DE4_NAMEBYTES];

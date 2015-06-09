@@ -4,6 +4,7 @@
 #include "state.h"
 #include "prop.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 #define BADPROP(id) (id == DE4_BADID || !(id & PROP_VALID_FLAG))
 #define BADENTITY(id) (id == DE4_BADID)
@@ -81,6 +82,7 @@ void de4_removepropertyi(de4_State * D, de4_Id id)
 	prop_remove(D, D->this_entity, id);
 }
 
+/*
 size_t de4_allpass(de4_State * D, de4_Function f)
 {
 	size_t n = 0;
@@ -98,7 +100,8 @@ size_t de4_allpass(de4_State * D, de4_Function f)
 
 	return n;
 }
-size_t de4_pass1(de4_State * D, de4_Id id_0, de4_Function f)
+*/
+size_t de4_pass1(de4_State * D, de4_Id id_0, de4_Function1 f)
 {
 	if(id_0 == DE4_BADID)
 		return 0;
@@ -107,14 +110,17 @@ size_t de4_pass1(de4_State * D, de4_Id id_0, de4_Function f)
 
 	if(PROP_IS_CORE(id_0))
 	{
+		printf("PROP IS CORE\n");
 		uint32_t flag = (1 << PROP_IDX(id_0));
-		for(de4_Id eid = 0 ; eid < D->entity_num ; ++ eid)
+		core_data_t * prop = vector_get(&D->coredata, PROP_IDX(id_0));
+		D->this_entity = 1;
+		for(de4_Id eid = 0 ; eid < D->entity_num ; ++ eid, ++ prop, ++ D->this_entity)
 		{
 			if(D->entities[eid].coreflags & flag)
 			{
 				++ n;
 				D->this_entity = eid + 1;
-				f(D);
+				f(D, prop);
 			}
 		}
 	}
@@ -128,7 +134,7 @@ size_t de4_pass1(de4_State * D, de4_Id id_0, de4_Function f)
 				{
 					n ++;
 					D->this_entity = eid + 1;
-					f(D);
+					f(D, 0);
 					break;
 				}
 			}
@@ -137,11 +143,11 @@ size_t de4_pass1(de4_State * D, de4_Id id_0, de4_Function f)
 
 	return n;
 }
-size_t de4_pass2(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Function f)
+size_t de4_pass2(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Function2 f)
 {
 	return 0;
 }
-size_t de4_pass3(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Id id_2, de4_Function f)
+size_t de4_pass3(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Id id_2, de4_Function3 f)
 {
 	return 0;
 }
