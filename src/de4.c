@@ -110,7 +110,7 @@ size_t de4_pass1(de4_State * D, de4_Id id_0, de4_Function1 f)
 
 	if(PROP_IS_CORE(id_0))
 	{
-		printf("PROP IS CORE\n");
+		//printf("PROP IS CORE\n");
 		uint32_t flag = (1 << PROP_IDX(id_0));
 		core_data_t * prop = vector_get(&D->coredata, PROP_IDX(id_0));
 		D->this_entity = 1;

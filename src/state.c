@@ -8,10 +8,6 @@
 #include "prop.h"
 #include "entity.h"
 
-#ifdef _WIN32
-#define memalign(align, size) _aligned_malloc(size, align)
-#endif
-
 de4_State * de4_create(size_t numentities)
 {
 	de4_State * D = malloc(sizeof(de4_State));

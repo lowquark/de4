@@ -52,8 +52,10 @@ size_t de4_pass2(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Function2 f);
 size_t de4_pass3(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Id id_2, de4_Function3 f);
 
 // retrieves the nth property requested for processing by the system
-void * de4_systemprop     (de4_State * D, size_t n);
+// void * de4_systemprop     (de4_State * D, size_t n);
 
+// ultra fast-mode, no jump cache miss
+/*
 void * de4_coredata_get(de4_State * D, int idx);
 #define DE4_BEGIN_COREPASS(D, id) \
 	do {\
@@ -64,6 +66,7 @@ void * de4_coredata_get(de4_State * D, int idx);
 
 #define DE4_END_COREPASS \
 	} while(0)
+*/
 	
 
 /*
