@@ -116,7 +116,6 @@ size_t de4_pass1(de4_State * D, de4_Id id_0, de4_Function1 f)
 		uint32_t flag = (1 << PROP_IDX(id_0));
 		core_data_t * prop_base = vector_get(&D->coredata, PROP_IDX(id_0));
 
-		#pragma omp parallel for
 		for(de4_Id eidx = 0 ; eidx < D->entity_num ; ++ eidx)
 		{
 			uint32_t coreflags = D->entities[eidx].coreflags;
@@ -126,8 +125,6 @@ size_t de4_pass1(de4_State * D, de4_Id id_0, de4_Function1 f)
 				D->this_entity = eidx + 1;
 				f(D, prop_base + eidx);
 			}
-
-			printf("%u/%u: %u\n", omp_get_thread_num(), omp_get_num_threads(), eidx);
 		}
 		D->this_entity = DE4_BADID;
 	}
