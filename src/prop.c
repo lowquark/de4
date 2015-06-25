@@ -10,6 +10,10 @@
 #include <stdio.h>
 #include <assert.h>
 
+#ifdef _WIN32
+#define memalign(align, size) _aligned_malloc(size, align)
+#endif
+
 const de4_PropertyDef * prop_getdefi(de4_State * D, de4_Id propid)
 {
 	if(propid & PROP_CORE_FLAG)
@@ -173,7 +177,7 @@ void prop_remove(de4_State * D, de4_Id eid, de4_Id propid)
 {
 	assert(eid <= D->entity_num && eid != DE4_BADID);
 
-	printf("prop_remove(0x%04X, 0x%08X)\n", eid, propid);
+	//printf("prop_remove(0x%04X, 0x%08X)\n", eid, propid);
 
 	entity_t * e = entity_get(D, eid);
 	const de4_PropertyDef * def = prop_getdefi(D, propid);

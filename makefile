@@ -1,7 +1,8 @@
 
-SRCDIR=src/
-SOURCEFILES=main.c $(SRCDIR)de4.c $(SRCDIR)state.c $(SRCDIR)prop.c $(SRCDIR)entity.c $(SRCDIR)dump.c
+SRCFILES=src/de4.c src/dump.c src/entity.c src/prop.c src/state.c
 
-INCLUDEDIR=./include/
-test_de4: $(SOURCEFILES) $(INCLUDEFILES)
-	gcc -o $@ -O3 $(SOURCEFILES) -I$(INCLUDEDIR) -g -std=c99 -Wall -fopenmp
+libde4.a: $(patsubst %.c,%.o,$(SRCFILES))
+	ar rcs $@ $^
+
+%.o: %.c
+	gcc -c -o $@ $< -Wall -std=c99 -g -I./include/
