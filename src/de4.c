@@ -5,6 +5,7 @@
 #include "prop.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <omp.h>
 
 #define BADPROP(id) (id == DE4_BADID || !(id & PROP_VALID_FLAG))
 #define BADENTITY(id) (id == DE4_BADID)
@@ -56,6 +57,7 @@ void * de4_addpropertyi(de4_State * D, de4_Id id)
 	if(BADENTITY(D->this_entity))
 		return 0;
 
+	/*
 	event_t event = {
 		.type = EVENT_ADDPROPERTY,
 		.addproperty = {
@@ -64,6 +66,7 @@ void * de4_addpropertyi(de4_State * D, de4_Id id)
 		}
 	};
 	vector_push(&D->events, event);
+	*/
 
 	void * existing = prop_get(D, D->this_entity, id);
 
@@ -110,35 +113,42 @@ size_t de4_pass1(de4_State * D, de4_Id id_0, de4_Function1 f)
 
 	if(PROP_IS_CORE(id_0))
 	{
-		printf("PROP IS CORE\n");
 		uint32_t flag = (1 << PROP_IDX(id_0));
-		core_data_t * prop = vector_get(&D->coredata, PROP_IDX(id_0));
-		D->this_entity = 1;
-		for(de4_Id eid = 0 ; eid < D->entity_num ; ++ eid, ++ prop, ++ D->this_entity)
+		core_data_t * prop_base = vector_get(&D->coredata, PROP_IDX(id_0));
+
+		#pragma omp parallel for
+		for(de4_Id eidx = 0 ; eidx < D->entity_num ; ++ eidx)
 		{
-			if(D->entities[eid].coreflags & flag)
+			uint32_t coreflags = D->entities[eidx].coreflags;
+			if(coreflags & flag)
 			{
 				++ n;
-				D->this_entity = eid + 1;
-				f(D, prop);
+				D->this_entity = eidx + 1;
+				f(D, prop_base + eidx);
 			}
+
+			printf("%u/%u: %u\n", omp_get_thread_num(), omp_get_num_threads(), eidx);
 		}
+		D->this_entity = DE4_BADID;
 	}
 	else
 	{
 		for(de4_Id eid = 0 ; eid < D->entity_num ; ++ eid)
 		{
+			void * data = 0;
 			vector_foreach(&D->entities[eid].properties, it)
 			{
-				if(it.index == id_0)
-				{
-					n ++;
-					D->this_entity = eid + 1;
-					f(D, 0);
-					break;
-				}
+				if(it.ptr->typeid == id_0) data = it.ptr->value;
+			}
+
+			if(data)
+			{
+				n ++;
+				D->this_entity = eid + 1;
+				f(D, data);
 			}
 		}
+		D->this_entity = DE4_BADID;
 	}
 
 	return n;

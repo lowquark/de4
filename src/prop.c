@@ -88,7 +88,7 @@ void prop_clearall(de4_State * D)
 // retrieves component data for an entity
 void * prop_get(de4_State * D, de4_Id eid, de4_Id id)
 {
-	assert(eid < D->entity_num);
+	assert(eid <= D->entity_num && eid != DE4_BADID);
 
 	entity_t * e = entity_get(D, eid);
 
@@ -121,9 +121,9 @@ void * prop_get(de4_State * D, de4_Id eid, de4_Id id)
 // blindly attaches component data to an entity
 void * prop_add(de4_State * D, de4_Id eid, de4_Id propid)
 {
-	assert(eid < D->entity_num);
+	assert(eid <= D->entity_num && eid != DE4_BADID);
 
-	printf("prop_add(0x%04X, 0x%08X)\n", eid, propid);
+	//printf("prop_add(0x%04X, 0x%08X)\n", eid, propid);
 
 	entity_t * e = entity_get(D, eid);
 	const de4_PropertyDef * def = prop_getdefi(D, propid);
@@ -171,7 +171,7 @@ void * prop_add(de4_State * D, de4_Id eid, de4_Id propid)
 // finds and removes component data from an entity
 void prop_remove(de4_State * D, de4_Id eid, de4_Id propid)
 {
-	assert(eid < D->entity_num);
+	assert(eid <= D->entity_num && eid != DE4_BADID);
 
 	printf("prop_remove(0x%04X, 0x%08X)\n", eid, propid);
 

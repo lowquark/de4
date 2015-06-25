@@ -51,21 +51,6 @@ size_t de4_pass1(de4_State * D, de4_Id id_0, de4_Function1 f);
 size_t de4_pass2(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Function2 f);
 size_t de4_pass3(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Id id_2, de4_Function3 f);
 
-// retrieves the nth property requested for processing by the system
-void * de4_systemprop     (de4_State * D, size_t n);
-
-void * de4_coredata_get(de4_State * D, int idx);
-#define DE4_BEGIN_COREPASS(D, id) \
-	do {\
-		uint8_t * data = de4_coredata_get(D, idx & 0xFFFF); \
-		uint32_t flags = (1 << (idx & 0xFFFF)); \
-
-		for( ; uint8_t <= 
-
-#define DE4_END_COREPASS \
-	} while(0)
-	
-
 /*
 // registers an event handler for a given event type
 void de4_subscribe(de4_State * D, uint16_t type, de4_EventHandler h);
