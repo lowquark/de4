@@ -50,6 +50,7 @@ void   de4_removepropertyi(de4_State * D, de4_Id id);
 size_t de4_pass1(de4_State * D, de4_Id id_0, de4_Function1 f);
 size_t de4_pass2(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Function2 f);
 size_t de4_pass3(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Id id_2, de4_Function3 f);
+size_t de4_pass4(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Id id_2, de4_Id id_3, de4_Function4 f);
 
 /*
 // registers an event handler for a given event type

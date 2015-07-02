@@ -130,18 +130,22 @@ size_t de4_pass1(de4_State * D, de4_Id id_0, de4_Function1 f)
 	}
 	else
 	{
-		for(de4_Id eid = 0 ; eid < D->entity_num ; ++ eid)
+		for(de4_Id eidx = 0 ; eidx < D->entity_num ; ++ eidx)
 		{
 			void * data = 0;
-			vector_foreach(&D->entities[eid].properties, it)
+			vector_foreach(&D->entities[eidx].properties, it)
 			{
-				if(it.ptr->typeid == id_0) data = it.ptr->value;
+				if(it.ptr->typeid == id_0)
+				{
+					data = it.ptr->value;
+					break;
+				}
 			}
 
 			if(data)
 			{
-				n ++;
-				D->this_entity = eid + 1;
+				++ n;
+				D->this_entity = eidx + 1;
 				f(D, data);
 			}
 		}
@@ -152,9 +156,65 @@ size_t de4_pass1(de4_State * D, de4_Id id_0, de4_Function1 f)
 }
 size_t de4_pass2(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Function2 f)
 {
-	return 0;
+	size_t n = 0;
+
+	for(de4_Id eid = 1 ; eid <= D->entity_num ; ++ eid)
+	{
+		void * data0 = prop_get(D, eid, id_0);
+		void * data1 = prop_get(D, eid, id_1);
+
+		if(data0 && data1)
+		{
+			++ n;
+			D->this_entity = eid;
+			f(D, data0, data1);
+		}
+	}
+	D->this_entity = DE4_BADID;
+
+	return n;
 }
 size_t de4_pass3(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Id id_2, de4_Function3 f)
 {
-	return 0;
+	size_t n = 0;
+
+	for(de4_Id eid = 1 ; eid <= D->entity_num ; ++ eid)
+	{
+		void * data0 = prop_get(D, eid, id_0);
+		void * data1 = prop_get(D, eid, id_1);
+		void * data2 = prop_get(D, eid, id_2);
+
+		if(data0 && data1 && data2)
+		{
+			++ n;
+			D->this_entity = eid;
+			f(D, data0, data1, data2);
+		}
+	}
+	D->this_entity = DE4_BADID;
+
+	return n;
 }
+size_t de4_pass4(de4_State * D, de4_Id id_0, de4_Id id_1, de4_Id id_2, de4_Id id_3, de4_Function4 f)
+{
+	size_t n = 0;
+
+	for(de4_Id eid = 1 ; eid <= D->entity_num ; ++ eid)
+	{
+		void * data0 = prop_get(D, eid, id_0);
+		void * data1 = prop_get(D, eid, id_1);
+		void * data2 = prop_get(D, eid, id_2);
+		void * data3 = prop_get(D, eid, id_3);
+
+		if(data0 && data1 && data2 && data3)
+		{
+			++ n;
+			D->this_entity = eid;
+			f(D, data0, data1, data2, data3);
+		}
+	}
+	D->this_entity = DE4_BADID;
+
+	return n;
+}
+
